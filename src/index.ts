@@ -37,24 +37,37 @@ export async function run(options: CliOptions) {
     process.exit(0);
   }
 
-  // Enrich file stats
+  const spinner = ora("Analyzing staged changes...").start();
+
   const enrichedFiles = [];
+  let summary = "";
+  let commitMessage = "";
 
-  for (const file of stagedFiles) {
-    const stats = await getDiffStats(file.path);
-    enrichedFiles.push({
-      path: file.path,
-      additions: stats.additions,
-      deletions: stats.deletions,
-      status: file.status
-    });
+  try {
+    for (const file of stagedFiles) {
+      const stats = await getDiffStats(file.path);
+      enrichedFiles.push({
+        path: file.path,
+        additions: stats.additions,
+        deletions: stats.deletions,
+        status: file.status
+      });
+    }
+
+    const scope = detectScope(enrichedFiles.map(f => f.path));
+    const type = await classifyCommitType(enrichedFiles);
+    summary = generateSummary(enrichedFiles);
+
+    spinner.succeed("Analyzing staged changes...");
+
+    spinner.start("Generating commit message...");
+    commitMessage = generateCommitMessage(type, scope, enrichedFiles);
+    spinner.succeed("Generating commit message...");
+  } catch (error) {
+    spinner.fail("Failed during analysis or generation.");
+    console.error(error);
+    process.exit(1);
   }
-
-  const scope = detectScope(enrichedFiles.map(f => f.path));
-  const type = await classifyCommitType(enrichedFiles);
-  const summary = generateSummary(enrichedFiles);
-
-  let commitMessage = generateCommitMessage(type, scope, enrichedFiles);
 
   // Load config
   const config = await loadConfig();
@@ -74,7 +87,7 @@ export async function run(options: CliOptions) {
         selectedModel = (await getBestModel()) || "deepseek-coder:6.7b";
       }
 
-      const spinner = ora(`Enhancing commit with AI (${selectedModel})...`).start();
+      spinner.start(`Enhancing commit with AI (${selectedModel})...`);
 
       try {
         commitMessage = await enhanceCommit(
