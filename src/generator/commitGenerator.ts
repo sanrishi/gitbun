@@ -7,6 +7,33 @@ type FileInfo = {
 
 const DEFAULT_TEMPLATE = "{type}{scope}: {message}";
 
+function normalizeTemplate(template: string): string {
+  const validPlaceholders = [
+    "{type}",
+    "{scope}",
+    "{message}"
+  ];
+
+  // Required placeholders
+  if (
+    !template.includes("{type}") ||
+    !template.includes("{message}")
+  ) {
+    return DEFAULT_TEMPLATE;
+  }
+
+  // Detect invalid placeholders like {mesage}
+  const matches = template.match(/{.*?}/g) || [];
+
+  for (const match of matches) {
+    if (!validPlaceholders.includes(match)) {
+      return DEFAULT_TEMPLATE;
+    }
+  }
+
+  return template;
+}
+
 export function generateCommitMessage(
   type: string,
   scope: string,
@@ -15,7 +42,9 @@ export function generateCommitMessage(
 ): string {
   const description = buildDescription(type, scope, files);
 
-  const message = formatCommitMessage(format, {
+  const safeTemplate = normalizeTemplate(format);
+
+  const message = formatCommitMessage(safeTemplate, {
     type,
     scope: scope ? `(${scope})` : "",
     message: description
