@@ -17,15 +17,19 @@ function classifyFileType(
     return profile.classifyType(file);
   }
 
-  if (file.includes("test")) {
-    return "test";
-  }
-
   if (
     file.endsWith(".md") ||
     file.toLowerCase().includes("docs")
   ) {
     return "docs";
+  }
+
+  if (
+    file.includes("/tests/") ||
+    file.endsWith(".test.ts") ||
+    file.endsWith(".spec.ts")
+  ) {
+    return "test";
   }
 
   return "chore";

@@ -22,9 +22,13 @@ export const pythonProfile: LanguageProfile = {
     },
 
     classifyType(path: string) {
+        const fileName =
+            path.split("/").pop() || path;
+
         if (
-            path.includes("tests") ||
-            path.startsWith("test_")
+            path.includes("/tests/") ||
+            fileName.startsWith("test_") ||
+            fileName.endsWith("_test.py")
         ) {
             return "test";
         }
