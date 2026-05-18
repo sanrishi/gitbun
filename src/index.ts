@@ -1,3 +1,4 @@
+// src/index.ts
 import chalk from "chalk";
 import ora from "ora";
 
@@ -13,11 +14,14 @@ import { commit } from "./git/commit";
 import { enhanceCommit } from "./llm/ollamaEnhancer";
 import { loadConfig } from "./config/loadConfig";
 import { isOllamaRunning, getBestModel } from "./llm/checkOllama";
+import { analyzeSemanticChanges } from "./analyzer/semanticAnalyzer";
+import { SemanticEvent } from "./analyzer/semanticTypes";
 
 interface CliOptions {
   ai?: boolean;
   model?: string;
   auto?: boolean;
+  verbose?: boolean;
   [key: string]: unknown;
 }
 
@@ -50,19 +54,38 @@ export async function run(options: CliOptions) {
     });
   }
 
- const scope = detectScope(enrichedFiles.map(f => f.path));
-const type = await classifyCommitType(enrichedFiles);
-const summary = generateSummary(enrichedFiles);
+  // --- Semantic Analysis (AST-based) ---
+  let semanticEvents: SemanticEvent[] = [];
+  // Only run if AI is enabled (or we can always run – decide based on config)
+  if (options.ai !== false) { // default true, respects --no-ai
+    const filePaths = enrichedFiles.map(f => f.path);
+    const semanticResult = await analyzeSemanticChanges(filePaths);
+    if (!semanticResult.skipped && semanticResult.events.length > 0) {
+      semanticEvents = semanticResult.events;
+      if (options.verbose) {
+        console.log(chalk.dim(`[semantic] Detected ${semanticEvents.length} structural changes`));
+      }
+    } else if (options.verbose && semanticResult.skipped) {
+      console.log(chalk.dim("[semantic] Analysis skipped (timeout or error)"));
+    }
+  }
 
-// Load config
-const config = await loadConfig();
+  const scope = detectScope(enrichedFiles.map(f => f.path));
+  const type = await classifyCommitType(enrichedFiles);
+  // Generate summary string for AI fallback (still needed for enhanceCommit)
+  const summary = generateSummary(enrichedFiles, semanticEvents);
 
-let commitMessage = generateCommitMessage(
-  type,
-  scope,
-  enrichedFiles,
-  config.format
-);
+  // Load config
+  const config = await loadConfig();
+
+  // Generate commit message, now with semantic events
+  let commitMessage = generateCommitMessage(
+    type,
+    scope,
+    enrichedFiles,
+    config.format,
+    semanticEvents   // pass events for richer message
+  );
 
   // AI enhancement (optional)
   if (options.ai) {
