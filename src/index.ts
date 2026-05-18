@@ -50,14 +50,19 @@ export async function run(options: CliOptions) {
     });
   }
 
-  const scope = detectScope(enrichedFiles.map(f => f.path));
-  const type = await classifyCommitType(enrichedFiles);
-  const summary = generateSummary(enrichedFiles);
+ const scope = detectScope(enrichedFiles.map(f => f.path));
+const type = await classifyCommitType(enrichedFiles);
+const summary = generateSummary(enrichedFiles);
 
-  let commitMessage = generateCommitMessage(type, scope, enrichedFiles);
+// Load config
+const config = await loadConfig();
 
-  // Load config
-  const config = await loadConfig();
+let commitMessage = generateCommitMessage(
+  type,
+  scope,
+  enrichedFiles,
+  config.format
+);
 
   // AI enhancement (optional)
   if (options.ai) {

@@ -1,5 +1,7 @@
 import fetch from "node-fetch";
 
+const OLLAMA_ENHANCE_TIMEOUT_MS = 10000;
+
 type OllamaChatResponse = {
   message?: {
     content: string;
@@ -31,6 +33,9 @@ Original: ${originalMessage}
 Context of changes:
 ${summary}`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), OLLAMA_ENHANCE_TIMEOUT_MS);
+
   try {
     const response = await fetch(`${getOllamaUrl()}/api/chat`, {
       method: "POST",
@@ -42,7 +47,8 @@ ${summary}`;
           { role: "user", content: userPrompt }
         ],
         stream: false
-      })
+      }),
+      signal: controller.signal
     });
 
     const data = (await response.json()) as OllamaChatResponse;
@@ -67,5 +73,7 @@ ${summary}`;
   } catch (error) {
     console.log("\nAI Enhancement Failed:", error);
     return originalMessage;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
