@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/nirvik34/gitbun/compare/v1.8.0...v1.9.0) (2026-05-19)
+
+
+### Features
+
+* **cli:** add --dry-run flag to preview commit message without committing ([9640dc5](https://github.com/nirvik34/gitbun/commit/9640dc509baccd2afc65a4167a64cc6024ff9faa))
+
 # [1.8.0](https://github.com/nirvik34/gitbun/compare/v1.7.0...v1.8.0) (2026-05-19)
 
 
