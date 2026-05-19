@@ -25,6 +25,7 @@ interface CliOptions {
   ai?: boolean;
   model?: string;
   auto?: boolean;
+  dryRun?: boolean;
   [key: string]: unknown;
 }
 
@@ -132,6 +133,12 @@ export async function run(options: CliOptions) {
     spinner.fail("Failed during analysis or generation.");
     console.error(error);
     process.exit(1);
+  }
+
+  // Dry run: print message and exit without committing
+  if (options.dryRun) {
+    console.log("\n" + commitMessage + "\n");
+    process.exit(0);
   }
 
   // Confirmation flow

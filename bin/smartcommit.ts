@@ -9,7 +9,8 @@ program
   .version(pkg.version)
   .option("--ai", "Enhance commit message using AI")
   .option("--auto", "Auto accept commit without confirmation")
-  .option("--model <name>", "Specify Ollama model");
+  .option("--model <name>", "Specify Ollama model")
+  .option("--dry-run", "Print the generated commit message and exit without committing");
 program.action(async (options) => {
   await run(options);
 });
