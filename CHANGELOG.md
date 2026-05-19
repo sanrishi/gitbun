@@ -1,3 +1,63 @@
+# [1.7.0](https://github.com/nirvik34/gitbun/compare/v1.6.0...v1.7.0) (2026-05-19)
+
+
+### Features
+
+* **cli:** added progress spinners ([83488ac](https://github.com/nirvik34/gitbun/commit/83488acf216cf61cfef7c19d87ec0851bc8cc3da))
+
+# [1.6.0](https://github.com/nirvik34/gitbun/compare/v1.5.1...v1.6.0) (2026-05-19)
+
+
+### Bug Fixes
+
+* harden vscode gitbun runner ([987cd54](https://github.com/nirvik34/gitbun/commit/987cd543533b2fef64ac2ab5492ac29da3b5fd27))
+
+
+### Features
+
+* add gitbun vscode extension scaffold ([97ee5ae](https://github.com/nirvik34/gitbun/commit/97ee5ae54898e100aa6c9a37e630ba8789a5d033))
+
+## [1.5.1](https://github.com/nirvik34/gitbun/compare/v1.5.0...v1.5.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* **llm:** support custom Ollama host URLs via environment variables ([#17](https://github.com/nirvik34/gitbun/issues/17)) ([812b56c](https://github.com/nirvik34/gitbun/commit/812b56c95493730c44c31a3e36da2a84aca0cb89))
+
+# [1.5.0](https://github.com/nirvik34/gitbun/compare/v1.4.0...v1.5.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* define MIN_GROUP_SIZE constant and resolve merge conflict ([273c46f](https://github.com/nirvik34/gitbun/commit/273c46fff5cf70196b61f4f40fa860002fb16f34))
+* pass config.format to generateCommitMessage ([d00c400](https://github.com/nirvik34/gitbun/commit/d00c4001d74b28a86e0425e26fbb81a3fb29cb00))
+* **security:** replace execSync with execFileSync to prevent command injection ([2dc662e](https://github.com/nirvik34/gitbun/commit/2dc662e0b1e3820be23a9b41b8a4cfb0e41832a4))
+
+
+### Features
+
+* **analyzer:** improve fallback diff summarization ([9a39117](https://github.com/nirvik34/gitbun/commit/9a39117f7aaf82e644ada59e7438cea2f09d2eb9))
+
+# [1.4.0](https://github.com/nirvik34/gitbun/compare/v1.3.2...v1.4.0) (2026-05-17)
+
+
+### Bug Fixes
+
+* **config:** relax template placeholder validation ([da0d385](https://github.com/nirvik34/gitbun/commit/da0d385c1831be7cc23367034071d93126e3edfe))
+* **config:** validate commit format templates ([64efc33](https://github.com/nirvik34/gitbun/commit/64efc3371bf3f170eadbecde7ce3ef018d3d8cf4))
+
+
+### Features
+
+* **config:** add configurable commit templates ([32d0fe7](https://github.com/nirvik34/gitbun/commit/32d0fe7c8f9d9f003a288ea0c59e2488a13a4c7a))
+
+## [1.3.2](https://github.com/nirvik34/gitbun/compare/v1.3.1...v1.3.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* **llm:** add timeouts to Ollama API calls to prevent CLI freezing ([6f8436c](https://github.com/nirvik34/gitbun/commit/6f8436ca33bcbc027c7e3170152a16e42f7cb1d5))
+
 ## [1.3.1](https://github.com/nirvik34/gitbun/compare/v1.3.0...v1.3.1) (2026-05-16)
 
 

@@ -1,12 +1,19 @@
 import chalk from "chalk";
 import ora from "ora";
+import { execFileSync } from "node:child_process";
 
 import { isGitRepo } from "./git/checkRepo";
 import { getStagedFiles } from "./git/getStagedFiles";
 import { getDiffStats } from "./git/getDiffStats";
 import { detectScope } from "./analyzer/scopeDetector";
 import { classifyCommitType } from "./analyzer/typeClassifier";
-import { generateSummary } from "./analyzer/summarizer";
+import { generateSummaryFromResult } from "./analyzer/summarizer";
+import {
+  filterLowSignalFiles,
+  type FileChange,
+} from "./analyzer/fileFilter";
+import { sortBySignal } from "./analyzer/fileScorer";
+import { deduplicateFiles } from "./analyzer/fileDeduplicator";
 import { generateCommitMessage } from "./generator/commitGenerator";
 import { confirmCommit } from "./ui/interactive";
 import { commit } from "./git/commit";
@@ -19,6 +26,17 @@ interface CliOptions {
   model?: string;
   auto?: boolean;
   [key: string]: unknown;
+}
+
+function getDiffForFile(path: string): string {
+  try {
+    return execFileSync("git", ["diff", "--cached", "-U0", "--", path], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    return "";
+  }
 }
 
 export async function run(options: CliOptions) {
@@ -37,56 +55,83 @@ export async function run(options: CliOptions) {
     process.exit(0);
   }
 
-  // Enrich file stats
-  const enrichedFiles = [];
+  const spinner = ora();
+  let commitMessage = "";
 
-  for (const file of stagedFiles) {
-    const stats = await getDiffStats(file.path);
-    enrichedFiles.push({
-      path: file.path,
-      additions: stats.additions,
-      deletions: stats.deletions,
-      status: file.status
-    });
-  }
+  try {
+    const enrichedFiles: FileChange[] = [];
+    spinner.start("Analyzing staged changes...");
+    for (const file of stagedFiles) {
+      const stats = await getDiffStats(file.path);
+      enrichedFiles.push({
+        path: file.path,
+        additions: stats.additions,
+        deletions: stats.deletions,
+        status: file.status,
+      });
+    }
 
-  const scope = detectScope(enrichedFiles.map(f => f.path));
-  const type = await classifyCommitType(enrichedFiles);
-  const summary = generateSummary(enrichedFiles);
+    const filteredFiles = filterLowSignalFiles(enrichedFiles);
+    const prioritizedCandidates = sortBySignal(filteredFiles, getDiffForFile);
+    const prioritizedFiles =
+      prioritizedCandidates.length > 0 ? prioritizedCandidates : enrichedFiles;
+    const MIN_GROUP_SIZE = 2;
+    const deduplicatedResult = deduplicateFiles(
+      prioritizedFiles,
+      MIN_GROUP_SIZE
+    );
 
-  let commitMessage = generateCommitMessage(type, scope, enrichedFiles);
+    const scope = detectScope(prioritizedFiles.map((f) => f.path));
+    const type = await classifyCommitType(prioritizedFiles);
+    const summary = generateSummaryFromResult(deduplicatedResult);
 
-  // Load config
-  const config = await loadConfig();
+    spinner.succeed("Analyzing staged changes...");
 
-  // AI enhancement (optional)
-  if (options.ai) {
-    const running = await isOllamaRunning();
+    // Load config
+    const config = await loadConfig();
 
-    if (!running) {
-      console.log(
-        chalk.yellow("Ollama is not running. Using rule-based commit.")
-      );
-    } else {
-      let selectedModel = options.model || config.model;
+    spinner.start("Generating commit message...");
+    commitMessage = generateCommitMessage(
+      type,
+      scope,
+      prioritizedFiles,
+      config.format
+    );
+    spinner.succeed("Generating commit message...");
 
-      if (!selectedModel) {
-        selectedModel = (await getBestModel()) || "deepseek-coder:6.7b";
-      }
+    // AI enhancement (optional)
+    if (options.ai) {
+      const running = await isOllamaRunning();
 
-      const spinner = ora(`Enhancing commit with AI (${selectedModel})...`).start();
-
-      try {
-        commitMessage = await enhanceCommit(
-          commitMessage,
-          summary,
-          selectedModel
+      if (!running) {
+        console.log(
+          chalk.yellow("\nOllama is not running. Using rule-based commit.")
         );
-        spinner.succeed();
-      } catch {
-        spinner.fail("AI enhancement failed");
+      } else {
+        let selectedModel = options.model || config.model;
+
+        if (!selectedModel) {
+          selectedModel = (await getBestModel()) || "deepseek-coder:6.7b";
+        }
+
+        spinner.start(`Enhancing commit with AI (${selectedModel})...`);
+
+        try {
+          commitMessage = await enhanceCommit(
+            commitMessage,
+            summary,
+            selectedModel
+          );
+          spinner.succeed(`Enhanced commit with AI (${selectedModel})`);
+        } catch {
+          spinner.fail("AI enhancement failed");
+        }
       }
     }
+  } catch (error) {
+    spinner.fail("Failed during analysis or generation.");
+    console.error(error);
+    process.exit(1);
   }
 
   // Confirmation flow
