@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { program } from "commander";
+import chalk from "chalk";
 import { run } from "../src/index";
+import { CancellationError } from "../src/utils/errors";
 import pkg from "../package.json";
 program
   .name("smartcommit")
@@ -12,7 +14,22 @@ program
   .option("--model <name>", "Specify Ollama model")
   .option("--dry-run", "Print the generated commit message and exit without committing");
 program.action(async (options) => {
-  await run(options);
+  try {
+    await run(options);
+    process.exit(0);
+  } catch (error: unknown) {
+    if (error instanceof CancellationError) {
+      console.log(error.message);
+      process.exit(0);
+    }
+
+    if (error instanceof Error) {
+      console.error(chalk.red(error.message));
+    } else {
+      console.error(chalk.red("An unknown error occurred."));
+    }
+    process.exit(1);
+  }
 });
 
 program.parse();
