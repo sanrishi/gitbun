@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { program } from "commander";
+import chalk from "chalk";
 import { run } from "../src/index";
+import { CancellationError } from "../src/utils/errors";
 import pkg from "../package.json";
 program
   .name("smartcommit")
@@ -14,8 +16,17 @@ program.action(async (options) => {
   try {
     await run(options);
     process.exit(0);
-  } catch (error: any) {
-    console.error(error.message);
+  } catch (error: unknown) {
+    if (error instanceof CancellationError) {
+      console.log(error.message);
+      process.exit(0);
+    }
+
+    if (error instanceof Error) {
+      console.error(chalk.red(error.message));
+    } else {
+      console.error(chalk.red("An unknown error occurred."));
+    }
     process.exit(1);
   }
 });

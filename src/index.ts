@@ -13,6 +13,7 @@ import { commit } from "./git/commit";
 import { enhanceCommit } from "./llm/ollamaEnhancer";
 import { loadConfig } from "./config/loadConfig";
 import { isOllamaRunning, getBestModel } from "./llm/checkOllama";
+import { ValidationError, CancellationError } from "./utils/errors";
 
 interface CliOptions {
   ai?: boolean;
@@ -25,13 +26,13 @@ export async function run(options: CliOptions) {
   // Ensure we are inside a Git repo
   const repo = await isGitRepo();
   if (!repo) {
-    throw new Error(chalk.red("Not inside a Git repository."));
+    throw new ValidationError("Not inside a Git repository.");
   }
 
   const stagedFiles = await getStagedFiles();
 
   if (stagedFiles.length === 0) {
-    throw new Error(chalk.yellow("No staged changes found.") + "\nStage changes using: git add <file>");
+    throw new ValidationError("No staged changes found.\nStage changes using: git add <file>");
   }
 
   // Enrich file stats
@@ -95,7 +96,7 @@ export async function run(options: CliOptions) {
     const result = await confirmCommit(commitMessage);
 
     if (!result) {
-      throw new Error("Commit cancelled.");
+      throw new CancellationError();
     }
 
     finalMessage = result;
