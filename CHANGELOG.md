@@ -1,3 +1,11 @@
+## [1.9.1](https://github.com/nirvik34/gitbun/compare/v1.9.0...v1.9.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* replace process.exit() with custom Error throws ([#18](https://github.com/nirvik34/gitbun/issues/18)) ([80e90c4](https://github.com/nirvik34/gitbun/commit/80e90c4875d2f9be492387e2b8f80fd40fdbe61f))
+* resolve coderabbit reviews and lint warnings ([ba714ae](https://github.com/nirvik34/gitbun/commit/ba714aef11c2e4c16d898e158c3343fd529a1a2e))
+
 # [1.9.0](https://github.com/nirvik34/gitbun/compare/v1.8.0...v1.9.0) (2026-05-19)
 
 
