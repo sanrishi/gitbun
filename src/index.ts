@@ -23,6 +23,7 @@ import { loadConfig } from "./config/loadConfig";
 import { isOllamaRunning, getBestModel } from "./llm/checkOllama";
 import { analyzeSemanticChanges } from "./analyzer/semanticAnalyzer";
 import { SemanticEvent } from "./analyzer/semanticTypes";
+import { ValidationError, CancellationError } from "./utils/errors";
 
 interface CliOptions {
   ai?: boolean;
@@ -48,16 +49,13 @@ export async function run(options: CliOptions) {
   // Ensure we are inside a Git repo
   const repo = await isGitRepo();
   if (!repo) {
-    console.log(chalk.red("Not inside a Git repository."));
-    process.exit(1);
+    throw new ValidationError("Not inside a Git repository.");
   }
 
   const stagedFiles = await getStagedFiles();
 
   if (stagedFiles.length === 0) {
-    console.log(chalk.yellow("No staged changes found."));
-    console.log("Stage changes using: git add <file>");
-    process.exit(0);
+    throw new ValidationError("No staged changes found.\nStage changes using: git add <file>");
   }
 
   const spinner = ora();
@@ -168,8 +166,7 @@ export async function run(options: CliOptions) {
   } else {
     const result = await confirmCommit(commitMessage);
     if (!result) {
-      console.log("Commit cancelled.");
-      process.exit(0);
+      throw new CancellationError();
     }
     finalMessage = result;
   }
