@@ -154,6 +154,29 @@ function detectInterfaceChanges(
     const removed = oldProps.filter(
       (op) => !newProps.some((np) => np.name === op.name),
     );
+    const changed = newProps
+      .map((np) => {
+        const old = oldProps.find((op) => op.name === np.name);
+        if (!old) return null;
+        if (old.type !== np.type || old.hasQuestionToken !== np.hasQuestionToken) {
+          return np.name;
+        }
+        return null;
+      })
+      .filter((x): x is string => Boolean(x));
+
+    if (added.length || removed.length || changed.length) {
+      events.push({
+        type: "interface_change",
+        file: filePath,
+        entityName: name,
+        details: {
+          added: added.map((p) => p.name),
+          removed: removed.map((p) => p.name),
+          changed,
+        },
+      });
+    }
 
     if (added.length || removed.length) {
       events.push({
