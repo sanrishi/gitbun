@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import type { GitbunConfig } from "../config/loadConfig";
 
 const OLLAMA_ENHANCE_TIMEOUT_MS = 10000;
 
@@ -25,13 +26,17 @@ const getOllamaUrl = () => process.env.OLLAMA_HOST?.replace(/\/$/, "") || "http:
 export async function enhanceCommit(
   originalMessage: string,
   summary: string,
-  model: string
+  model: string,
+  config: GitbunConfig
 ): Promise<string> {
   const userPrompt = `Refine this commit message:
 Original: ${originalMessage}
 
 Context of changes:
 ${summary}`;
+  const finalPrompt = config.customPrompt?.trim()
+    ? `${SYSTEM_PROMPT}\n\nUser Custom Instructions:\n${config.customPrompt}`
+    : SYSTEM_PROMPT;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), OLLAMA_ENHANCE_TIMEOUT_MS);
@@ -43,7 +48,7 @@ ${summary}`;
       body: JSON.stringify({
         model: model,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: finalPrompt },
           { role: "user", content: userPrompt }
         ],
         stream: false
