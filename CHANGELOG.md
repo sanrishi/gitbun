@@ -1,3 +1,15 @@
+# [1.10.0](https://github.com/nirvik34/gitbun/compare/v1.9.1...v1.10.0) (2026-05-21)
+
+
+### Bug Fixes
+
+* address PR review comments (semantic analysis safety & correctness) ([14ba674](https://github.com/nirvik34/gitbun/commit/14ba67447545b319641ebc120c466135b6e88bb1))
+
+
+### Features
+
+* **analyzer:** add semantic diff understanding for TS/JS ([b7b619e](https://github.com/nirvik34/gitbun/commit/b7b619e51bc4399d6549c25083aaa81bdd8139ea)), closes [#7](https://github.com/nirvik34/gitbun/issues/7)
+
 ## [1.9.1](https://github.com/nirvik34/gitbun/compare/v1.9.0...v1.9.1) (2026-05-20)
 
 
